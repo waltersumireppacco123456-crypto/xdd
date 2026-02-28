@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carta</title>
+
+<!-- Fuentes -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@300;400;500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bgImg: url("./IMG/atardecer.jpg");
+  --text: rgba(255,255,255,.92);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Inter,sans-serif;
+  background:#000;
+  color:var(--text);
+}
+
+/* Fondo */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.75)),
+    var(--bgImg);
+  background-size:cover;
+  background-position:center;
+  animation:bgMove 25s ease-in-out infinite alternate;
+  z-index:0;
+}
+@keyframes bgMove{
+  from{transform:scale(1.05);}
+  to{transform:scale(1.15);}
+}
+
+/* Estrellas */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+}
+
+.wrap{position:relative;z-index:2;width:min(650px,92vw);}
+
+/* LOGIN */
+.card{
+  text-align:center;
+  padding:35px;
+  border-radius:25px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 25px 80px rgba(0,0,0,.6);
+}
+.title{
+  font-family:"Playfair Display",serif;
+  font-size:32px;
+}
+.subtitle{
+  margin-top:10px;
+  font-size:14px;
+  opacity:.7;
+}
+.form{
+  margin-top:20px;
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+input{
+  padding:12px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.1);
+  color:white;
+  text-align:center;
+  outline:none;
+}
+button{
+  padding:12px 18px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.12);
+  color:white;
+  cursor:pointer;
+}
+.error{
+  margin-top:10px;
+  font-size:13px;
+  color:#ffbcbc;
+}
+
+.stage{display:none;margin-top:20px;justify-content:center;}
+.stage.show{display:flex;animation:fade .6s ease forwards;}
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* SOBRE */
+.envelope{
+  position:relative;
+  width:min(560px,92vw);
+  height:340px;
+  border-radius:25px;
+  background:rgba(0,0,0,.25);
+  backdrop-filter:blur(12px);
+  box-shadow:0 25px 80px rgba(0,0,0,.6);
+  overflow:hidden;
+}
+
+.border-red{
+  position:absolute;
+  inset:15px;
+  border-radius:20px;
+  border:10px solid rgba(255,59,77,.9);
+}
+.border-black{
+  position:absolute;
+  inset:30px;
+  border-radius:15px;
+  border:8px solid black;
+}
+
+/* Tapa */
+.flap{
+  position:absolute;
+  top:30px;
+  left:30px;
+  width:calc(100% - 60px);
+  height:50%;
+  transform-origin:top;
+  transition:1s;
+}
+.flap svg{width:100%;height:100%;}
+.open .flap{transform:rotateX(170deg);}
+
+/* CARTA */
+.letter{
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:calc(100% - 120px);
+  height:220px;
+  transform:translate(-50%, -50%) translateY(250px);
+  border-radius:18px;
+  padding:18px;
+  background:rgba(0,0,0,.25);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  transition:1s cubic-bezier(.2,.9,.2,1);
+  overflow:hidden;
+}
+.open .letter{
+  transform:translate(-50%, -50%);
+}
+
+.letterHeader{
+  font-family:"Playfair Display",serif;
+  text-align:center;
+  margin-bottom:12px;
+  border-bottom:1px solid rgba(255,255,255,.2);
+  padding-bottom:8px;
+}
+
+.letterBody{
+  height:calc(100% - 60px);
+  overflow:auto;
+  scrollbar-width:none;
+}
+.letterBody::-webkit-scrollbar{display:none;}
+
+/* ✨ TEXTO RECTO Y ORDENADO */
+#typed{
+  white-space:pre-wrap;
+  line-height:1.9;
+  font-family:'IBM Plex Mono', monospace;
+  letter-spacing:0.4px;
+  font-kerning:none;
+}
+
+.cursor{
+  animation:blink .8s infinite;
+}
+@keyframes blink{
+  50%{opacity:0;}
+}
+
+.sig{
+  margin-top:10px;
+  opacity:.7;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+  <div class="card" id="card">
+    <div class="title">Acceso privado</div>
+    <div class="subtitle"></div>
+    <div class="form">
+      <input id="name" placeholder="Tu nombre">
+      <button onclick="verify()">Entrar</button>
+    </div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="envelope" id="env">
+      <div class="border-red"></div>
+      <div class="border-black"></div>
+
+      <div class="flap">
+        <svg viewBox="0 0 100 60" preserveAspectRatio="none">
+          <polygon points="0,0 100,0 50,60" fill="rgba(0,0,0,.3)"/>
+          <polygon points="0,0 100,0 50,60" fill="none" stroke="black" stroke-width="6"/>
+        </svg>
+      </div>
+
+      <div class="letter">
+        <div class="letterHeader">Para ti cmre</div>
+        <div class="letterBody" id="letterBody">
+          <div id="typed"></div><span class="cursor">▍</span>
+          <div class="sig" id="sig">— gracias por estar.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const text =
+`No cualquiera pasa este filtro.
+Claramente eres tú.
+(O alguien que intentó varias veces hasta acertar).
+Quería decirte algo importante,
+(siempre te lo digo :v )
+Gracias por ser mi amiga.
+Gracias por las risas, por las conversaciones que empiezan normales
+y terminan en teorías absurdas,
+y por escuchar mis tonterías
+como si fueran temas importantes.
+Eres mi persona favorita para quejarme de la vida,
+para mandar memes a horas indebidas
+y hacer planes que probablemente nunca cumplamos.
+Y aunque no lo diga cada cinco minutos:
+te valoro muchísimo.
+Mientras esté vivo
+(y mientras el WiFi funcione),
+voy a apoyarte en lo que necesites.
+En tus metas grandes.
+En tus ideas medio locas.
+Y sí, incluso cuando tomes decisiones cuestionables
+(aunque luego tenga derecho a decir “te lo advertí”).
+No quiero perder esta amistad.
+Porque encontrar a alguien que aguante mi humor
+y además se quede,
+no es tan común.
+Así que gracias por existir,
+por seguir aquí,
+y por no bloquearme todavía
+y gracias por aun no cansarte de mi.`;
+
+function typeWriter(t, el){
+  const body=document.getElementById("letterBody");
+  let i=0;
+  const timer=setInterval(()=>{
+    el.textContent+=t[i];
+    i++;
+    body.scrollTop=body.scrollHeight;
+    if(i>=t.length){
+      clearInterval(timer);
+      document.getElementById("sig").style.display="block";
+    }
+  },100);
+}
+
+function verify(){
+  const name=document.getElementById("name").value;
+  if(name==="Ines"){
+    document.getElementById("card").style.display="none";
+    document.getElementById("stage").classList.add("show");
+    setTimeout(()=>document.getElementById("env").classList.add("open"),600);
+    setTimeout(()=>typeWriter(text,document.getElementById("typed")),1200);
+  }else{
+    document.getElementById("error").textContent="Escribe bien tu nombre pues";
+  }
+}
+
+/* Estrellas */
+const canvas=document.getElementById("stars");
+const ctx=canvas.getContext("2d");
+let stars=[];
+function resize(){
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
+  stars=Array.from({length:80},()=>({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*1.5,
+    s:Math.random()*0.3+0.1
+  }));
+}
+resize();
+addEventListener("resize",resize);
+
+(function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(st=>{
+    st.y+=st.s;
+    if(st.y>canvas.height) st.y=0;
+    ctx.beginPath();
+    ctx.arc(st.x,st.y,st.r,0,Math.PI*2);
+    ctx.fillStyle="white";
+    ctx.fill();
+  });
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
